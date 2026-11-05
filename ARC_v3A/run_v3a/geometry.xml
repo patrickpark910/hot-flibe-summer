@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<geometry>
+  <cell id="100000" fill="100000" region="-100001 100002 -100003 100004 -100005" universe="100001"/>
+  <dagmc_universe id="100000" filename="/home/patri/projects/hot-flibe-summer/ARC_v3A/arc_v3a_deg10.h5m"/>
+  <surface id="100001" type="z-cylinder" boundary="vacuum" coeffs="0.0 0.0 940.3000000000002"/>
+  <surface id="100002" type="z-plane" boundary="vacuum" coeffs="-618.8"/>
+  <surface id="100003" type="z-plane" boundary="vacuum" coeffs="618.8"/>
+  <surface id="100004" type="y-plane" boundary="reflective" coeffs="0.0"/>
+  <surface id="100005" type="plane" boundary="reflective" coeffs="-0.17364817766693033 0.984807753012208 0.0 0.0"/>
+</geometry>

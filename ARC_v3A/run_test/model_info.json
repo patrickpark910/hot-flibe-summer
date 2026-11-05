@@ -1,0 +1,339 @@
+{
+ "h5m": "/home/patri/projects/hot-flibe-summer/ARC_v3A/arc_v3a_deg10.h5m",
+ "sector_deg": 10.0,
+ "neutron_rate": 4e+20,
+ "fusion_power_MW": 1133.0,
+ "photons": true,
+ "source": "tokamak",
+ "li6_percent": 90.0,
+ "flibe_density": 1.974,
+ "heating_materials": [
+  "flibe",
+  "tungsten",
+  "vanadium",
+  "tungsten_carbide",
+  "ss316l"
+ ],
+ "volumes": [
+  {
+   "id": 1,
+   "material": "plasma",
+   "volume_cm3": 5452414.673239687,
+   "r_min": 344.11999999999995,
+   "r_max": 580.3400000000001,
+   "z_min": -219.74999999999997,
+   "z_max": 219.74999999999997,
+   "label": "plasma_1"
+  },
+  {
+   "id": 2,
+   "material": "tungsten",
+   "volume_cm3": 84491.51494755875,
+   "r_min": 341.49999999999994,
+   "r_max": 582.5000000000001,
+   "z_min": -409.5,
+   "z_max": 409.5,
+   "label": "tungsten_2"
+  },
+  {
+   "id": 3,
+   "material": "vanadium",
+   "volume_cm3": 169583.5777170835,
+   "r_min": 340.49999999999994,
+   "r_max": 583.5000000000001,
+   "z_min": -410.5,
+   "z_max": 410.5,
+   "label": "vanadium_3"
+  },
+  {
+   "id": 4,
+   "material": "flibe",
+   "volume_cm3": 773144.940443492,
+   "r_min": 336.0,
+   "r_max": 588.0000000000001,
+   "z_min": -415.0,
+   "z_max": 415.0,
+   "label": "flibe_vessel_channel"
+  },
+  {
+   "id": 5,
+   "material": "vanadium",
+   "volume_cm3": 524542.3391906748,
+   "r_min": 333.0,
+   "r_max": 591.0000000000001,
+   "z_min": -418.0,
+   "z_max": 418.0,
+   "label": "vanadium_5"
+  },
+  {
+   "id": 6,
+   "material": "flibe",
+   "volume_cm3": 11999659.824294602,
+   "r_min": 276.99999999999994,
+   "r_max": 720.0000000000001,
+   "z_min": -468.0,
+   "z_max": 468.0,
+   "label": "flibe_bulk_blanket"
+  },
+  {
+   "id": 7,
+   "material": "tungsten_carbide",
+   "volume_cm3": 1537805.8326664988,
+   "r_min": 247.99999999999994,
+   "r_max": 411.0000000000001,
+   "z_min": -437.0,
+   "z_max": 437.0,
+   "label": "tungsten_carbide_7"
+  },
+  {
+   "id": 8,
+   "material": "ss316l",
+   "volume_cm3": 402427.78284436744,
+   "r_min": 246.0,
+   "r_max": 722.0000000000001,
+   "z_min": -470.03230663451933,
+   "z_max": 470.03230663451933,
+   "label": "ss316l_8"
+  },
+  {
+   "id": 9,
+   "material": "magnet",
+   "volume_cm3": 202215.49146541706,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 5.669999999999999,
+   "z_max": 144.33,
+   "label": "magnet_9"
+  },
+  {
+   "id": 10,
+   "material": "magnet",
+   "volume_cm3": 100130.64794472477,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 155.67,
+   "z_max": 224.33,
+   "label": "magnet_10"
+  },
+  {
+   "id": 11,
+   "material": "magnet",
+   "volume_cm3": 100130.64794472465,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 235.67,
+   "z_max": 304.33,
+   "label": "magnet_11"
+  },
+  {
+   "id": 12,
+   "material": "magnet",
+   "volume_cm3": 85054.85220680339,
+   "r_min": 110.49999999999999,
+   "r_max": 169.50000000000003,
+   "z_min": 360.5,
+   "z_max": 419.5,
+   "label": "magnet_12"
+  },
+  {
+   "id": 13,
+   "material": "magnet",
+   "volume_cm3": 157695.99379832688,
+   "r_min": 155.51999999999995,
+   "r_max": 224.48000000000005,
+   "z_min": 440.52,
+   "z_max": 509.48,
+   "label": "magnet_13"
+  },
+  {
+   "id": 14,
+   "material": "magnet",
+   "volume_cm3": 258541.07560879493,
+   "r_min": 595.5599999999998,
+   "r_max": 644.44,
+   "z_min": 270.56,
+   "z_max": 319.44,
+   "label": "magnet_14"
+  },
+  {
+   "id": 15,
+   "material": "magnet",
+   "volume_cm3": 258541.07560879455,
+   "r_min": 595.5599999999998,
+   "r_max": 644.44,
+   "z_min": 200.55999999999997,
+   "z_max": 249.44000000000003,
+   "label": "magnet_15"
+  },
+  {
+   "id": 16,
+   "material": "magnet",
+   "volume_cm3": 183741.33875983692,
+   "r_min": 675.5399999999998,
+   "r_max": 714.46,
+   "z_min": 140.54,
+   "z_max": 179.46,
+   "label": "magnet_16"
+  },
+  {
+   "id": 17,
+   "material": "magnet",
+   "volume_cm3": 202215.49146541703,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -144.33,
+   "z_max": -5.669999999999999,
+   "label": "magnet_17"
+  },
+  {
+   "id": 18,
+   "material": "magnet",
+   "volume_cm3": 100130.6479447248,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -224.33,
+   "z_max": -155.67,
+   "label": "magnet_18"
+  },
+  {
+   "id": 19,
+   "material": "magnet",
+   "volume_cm3": 100130.64794472473,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -304.33,
+   "z_max": -235.67,
+   "label": "magnet_19"
+  },
+  {
+   "id": 20,
+   "material": "magnet",
+   "volume_cm3": 85054.85220680348,
+   "r_min": 110.49999999999999,
+   "r_max": 169.50000000000003,
+   "z_min": -419.5,
+   "z_max": -360.5,
+   "label": "magnet_20"
+  },
+  {
+   "id": 21,
+   "material": "magnet",
+   "volume_cm3": 157695.99379832673,
+   "r_min": 155.51999999999995,
+   "r_max": 224.48000000000005,
+   "z_min": -509.48,
+   "z_max": -440.52,
+   "label": "magnet_21"
+  },
+  {
+   "id": 22,
+   "material": "magnet",
+   "volume_cm3": 258541.0756087928,
+   "r_min": 595.5599999999998,
+   "r_max": 644.44,
+   "z_min": -319.44,
+   "z_max": -270.56,
+   "label": "magnet_22"
+  },
+  {
+   "id": 23,
+   "material": "magnet",
+   "volume_cm3": 258541.07560879382,
+   "r_min": 595.5599999999998,
+   "r_max": 644.44,
+   "z_min": -249.44000000000003,
+   "z_max": -200.55999999999997,
+   "label": "magnet_23"
+  },
+  {
+   "id": 24,
+   "material": "magnet",
+   "volume_cm3": 183741.33875983497,
+   "r_min": 675.5399999999998,
+   "r_max": 714.46,
+   "z_min": -179.46,
+   "z_max": -140.54,
+   "label": "magnet_24"
+  },
+  {
+   "id": 25,
+   "material": "ss316l",
+   "volume_cm3": 52019.51954833003,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 304.33,
+   "z_max": 340.0,
+   "label": "ss316l_25"
+  },
+  {
+   "id": 26,
+   "material": "ss316l",
+   "volume_cm3": 16537.74465035218,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 224.33,
+   "z_max": 235.67000000000002,
+   "label": "ss316l_26"
+  },
+  {
+   "id": 27,
+   "material": "ss316l",
+   "volume_cm3": 16537.744650352102,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": 144.33,
+   "z_max": 155.67,
+   "label": "ss316l_27"
+  },
+  {
+   "id": 28,
+   "material": "ss316l",
+   "volume_cm3": 16537.744650352146,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -5.67,
+   "z_max": 5.67,
+   "label": "ss316l_28"
+  },
+  {
+   "id": 29,
+   "material": "ss316l",
+   "volume_cm3": 16537.744650352077,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -155.67,
+   "z_max": -144.33,
+   "label": "ss316l_29"
+  },
+  {
+   "id": 30,
+   "material": "ss316l",
+   "volume_cm3": 16537.744650352157,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -235.67000000000002,
+   "z_max": -224.33,
+   "label": "ss316l_30"
+  },
+  {
+   "id": 31,
+   "material": "ss316l",
+   "volume_cm3": 52019.51954832995,
+   "r_min": 72.69,
+   "r_max": 148.31000000000003,
+   "z_min": -340.0,
+   "z_max": -304.33,
+   "label": "ss316l_31"
+  },
+  {
+   "id": 32,
+   "material": "tf_magnet",
+   "volume_cm3": 10639388.624547375,
+   "r_min": 149.30999999999997,
+   "r_max": 890.3000000000001,
+   "z_min": -568.8,
+   "z_max": 568.8,
+   "label": "tf_magnet_32"
+  }
+ ]
+}
