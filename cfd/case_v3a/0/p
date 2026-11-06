@@ -1,0 +1,123 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 100000.0;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    inlet_udiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    inlet_outboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    inlet_ldiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    inlet_bypass
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    outlet
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    fw_inboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    vvGap_inboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    fw_udiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    vvGap_udiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    fw_outboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    vvGap_outboard
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    fw_ldiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    vvGap_ldiv
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    vvBulk
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    shield
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    tank
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    baffles
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+    openingSides
+    {
+        type            calculated;
+        value           uniform 100000.0;
+    }
+}

@@ -1,0 +1,129 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      epsilon;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -3 0 0 0 0];
+
+internalField   uniform 5e-05;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.00133392;
+        value           uniform 5e-05;
+    }
+    inlet_udiv
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.000781903;
+        value           uniform 5e-05;
+    }
+    inlet_outboard
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.00269512;
+        value           uniform 5e-05;
+    }
+    inlet_ldiv
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.000661211;
+        value           uniform 5e-05;
+    }
+    inlet_bypass
+    {
+        type            turbulentMixingLengthDissipationRateInlet;
+        mixingLength    0.00176507;
+        value           uniform 5e-05;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 5e-05;
+        value           uniform 5e-05;
+    }
+    fw_inboard
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    vvGap_inboard
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    fw_udiv
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    vvGap_udiv
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    fw_outboard
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    vvGap_outboard
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    fw_ldiv
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    vvGap_ldiv
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    vvBulk
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    shield
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    tank
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    baffles
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+    openingSides
+    {
+        type            epsilonWallFunction;
+        value           uniform 5e-05;
+    }
+}

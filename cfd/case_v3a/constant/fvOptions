@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// OpenMC nuclear heating in the FLiBe (W/m3), mapped conservatively by make_case.py map
+
+flibeHeating
+{
+    type            scalarCodedSource;
+    selectionMode   all;
+    fields          (h);
+    name            flibeVolumeSource;
+    sourceField     qFlibe;
+    lambda          0;   // 1/s
+    codeInclude
+    #{
+        #include "fvm.H"
+    #};
+    codeAddSupRho
+    #{
+            // Explicit volumetric source read once from 0/<sourceField>, plus an
+            // implicit decay sink -lambda*rho*psi (phi is a mass flux, so psi is per kg).
+            const word srcName(coeffs_.get<word>("sourceField"));
+            const scalar lambda(coeffs_.get<scalar>("lambda"));
+            if (!mesh_.foundObject<volScalarField>(srcName))
+            {
+                regIOobject::store
+                (
+                    new volScalarField
+                    (
+                        IOobject
+                        (
+                            srcName, fileName("0"), mesh_,
+                            IOobject::MUST_READ, IOobject::NO_WRITE
+                        ),
+                        mesh_
+                    )
+                );
+            }
+            const volScalarField& S = mesh_.lookupObject<volScalarField>(srcName);
+            eqn += S();
+            if (lambda > 0)
+            {
+                eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
+            }
+    #};
+}

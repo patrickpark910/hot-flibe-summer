@@ -1,0 +1,15 @@
+# Generated OpenFOAM results (cases under cfd/). The 0/ directory is kept.
+cfd/*/processor*/
+cfd/*/postProcessing/
+cfd/*/constant/polyMesh/
+cfd/*/log.*
+cfd/*/[1-9]*/
+cfd/*/0.[0-9]*/
+cfd/*/dynamicCode/
+cfd/*/*.msh
+*.foam
+cfd/__pycache__/
+
+# OpenMC outputs
+statepoint.*.h5
+summary.h5

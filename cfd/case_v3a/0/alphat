@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      alphat;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    inlet_udiv
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    inlet_outboard
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    inlet_ldiv
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    inlet_bypass
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    outlet
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    fw_inboard
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    vvGap_inboard
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    fw_udiv
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    vvGap_udiv
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    fw_outboard
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    vvGap_outboard
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    fw_ldiv
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    vvGap_ldiv
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    vvBulk
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    shield
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    tank
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    baffles
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    openingSides
+    {
+        type            compressible::alphatJayatillekeWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+}

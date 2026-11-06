@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// FLiBe, Romatoski & Hu 2017 (T in K). mu: polynomial fit of 1.16e-4 exp(3755/T)
+// over 780-1050 K, degree 4, max error 0.24 %, rms 0.05 %.
+
+thermoType
+{
+    type            heRhoThermo;
+    mixture         pureMixture;
+    transport       polynomial;
+    thermo          hPolynomial;
+    equationOfState icoPolynomial;
+    specie          specie;
+    energy          sensibleEnthalpy;
+}
+
+mixture
+{
+    specie
+    {
+        molWeight       33.0;
+    }
+    equationOfState
+    {
+        rhoCoeffs<8>    (2413 -0.488 0 0 0 0 0 0);
+    }
+    thermodynamics
+    {
+        Hf              0;
+        Sf              0;
+        CpCoeffs<8>     (2386 0 0 0 0 0 0 0);
+    }
+    transport
+    {
+        muCoeffs<8>     (0.990238018447 -0.00373052170884 5.39223081854e-06 -3.51524886267e-09 8.68256154952e-13 0 0 0);
+        kappaCoeffs<8>  (1.1 0 0 0 0 0 0 0);
+    }
+}

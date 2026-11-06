@@ -1,0 +1,129 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0.001;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;
+        value           uniform 0.001;
+    }
+    inlet_udiv
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;
+        value           uniform 0.001;
+    }
+    inlet_outboard
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;
+        value           uniform 0.001;
+    }
+    inlet_ldiv
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;
+        value           uniform 0.001;
+    }
+    inlet_bypass
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;
+        value           uniform 0.001;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.001;
+        value           uniform 0.001;
+    }
+    fw_inboard
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    vvGap_inboard
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    fw_udiv
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    vvGap_udiv
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    fw_outboard
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    vvGap_outboard
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    fw_ldiv
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    vvGap_ldiv
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    vvBulk
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    shield
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    tank
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    baffles
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+    openingSides
+    {
+        type            kqRWallFunction;
+        value           uniform 0.001;
+    }
+}

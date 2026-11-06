@@ -1,0 +1,9 @@
+#!/bin/bash
+# Remove OpenFOAM outputs; keeps v3a.msh, 0/ base fields, constant/ and system/.
+cd "${0%/*}" || exit 1
+rm -rf processor* postProcessing dynamicCode constant/polyMesh log.* ./*.foam
+for d in */; do
+    d=${d%/}
+    case "$d" in 0|constant|system) ;; *) [[ "$d" =~ ^[0-9.eE+-]+$ ]] && rm -rf "$d" ;; esac
+done
+rm -f 0/C 0/Cx 0/Cy 0/Cz 0/V 0/qFlibe 0/S_*
