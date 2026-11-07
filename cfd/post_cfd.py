@@ -52,7 +52,7 @@ class Report:
 def latest_time(case: Path) -> str:
     times = []
     for d in case.iterdir():
-        if d.is_dir() and re.fullmatch(r"[0-9.eE+-]+", d.name):
+        if d.is_dir() and re.fullmatch(r"[0-9.eE+-]+", d.name) and (d / "phi").exists():
             try:
                 if float(d.name) > 0:
                     times.append((float(d.name), d.name))
@@ -122,6 +122,31 @@ def main():
         f"(all values full machine, x{k:g})")
     rep("=" * 96)
 
+    # ---- startup T limiter (make_case.py CFG T_limits): must be inactive at the end ----
+    # one file per run (restarts write <start>/limitTemperature[_<start>].dat; the scalars step
+    # writes a header-only one). Merge by iteration; for overlapping runs the newest file wins.
+    lim = sorted((case / "postProcessing" / "limitT").glob("*/limitTemperature*.dat"),
+                 key=lambda f: f.stat().st_mtime)
+    by_it = {}
+    for f in lim:
+        for ln in f.read_text().splitlines():
+            if ln.strip() and not ln.startswith("#"):
+                r = ln.split()
+                by_it[float(r[0])] = [f"{float(r[0]):g}"] + r[1:]
+    rows = [by_it[t] for t in sorted(by_it)]
+    if rows:
+        it, n_lo, _, n_hi, _ = rows[-1][:5]
+        clipped = [i for i, r in enumerate(rows) if int(r[1]) or int(r[3])]
+        if clipped and clipped[-1] == len(rows) - 1:
+            rep(f"\nWARNING: limitTemperature still clipping at iteration {it}: {n_lo} cells at Tmin, "
+                f"{n_hi} at Tmax. The solution is not physical; run longer or revisit the setup.")
+        else:
+            since = rows[clipped[-1] + 1][0] if clipped else rows[0][0]
+            rep(f"\nT limiter inactive since iteration {since} (last iteration {it}; "
+                f"clipped on {len(clipped)} iterations in total).")
+    else:
+        rep("\nNOTE: no postProcessing/limitT data found; limiter status unknown.")
+
     # ---- mass and energy -----------------------------------------------------------
     rep("\nMass flow by patch (kg/s; + = out)")
     m_out = m_in = H_net = 0.0
@@ -160,6 +185,8 @@ def main():
     ic = int(np.argmax(Tc))
     rep(f"\nPeak FLiBe temperature (cell): {Tc[ic]:.1f} K at R {Rc[ic]:.3f} m, Z {Zc[ic]:+.3f} m ({zone_of[ic]})")
     best = (-1.0, None, None)
+    Tlo, Thi = S.get("T_limits", (-np.inf, np.inf))
+    clamped = {}                                   # faces outside T_limits: rho clamped there
     for p, info in S["patches"].items():
         if info["role"] != "wallHeat":
             continue
@@ -168,8 +195,14 @@ def main():
         j = int(np.argmax(Tf))
         if Tf[j] > best[0]:
             best = (float(Tf[j]), p, fcentre(bnd[p]["startFace"] + j))
+        nc = int(((Tf > Thi) | (Tf < Tlo)).sum())
+        if nc:
+            clamped[p] = (nc, n)
     rep(f"Peak wall temperature: {best[0]:.1f} K on {best[1]} at R {best[2][0]:.3f} m, Z {best[2][1]:+.3f} m")
     rep("  (no conjugate heat transfer: this is the FLiBe-side wall temperature)")
+    if clamped:
+        rep(f"WARNING: wall faces outside T_limits {Tlo:g}-{Thi:g} K, where rhoMin/rhoMax clamp rho: "
+            + ", ".join(f"{p} {nc}/{n}" for p, (nc, n) in clamped.items()))
 
     # ---- y+ ----------------------------------------------------------------------------
     yp = fld("yPlus")
@@ -273,9 +306,9 @@ def plots(case, td, out_dir, pts, faces, owner, bnd, Uc, Tc, agec, rho_c, V, iso
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.collections import PolyCollection
-    from matplotlib.colors import LinearSegmentedColormap, LogNorm, Normalize
+    from matplotlib.colors import LogNorm, Normalize
 
-    cmap = LinearSegmentedColormap.from_list("blue_seq", BLUE)
+    cmap = matplotlib.colormaps["coolwarm"]
     fr = bnd["front"]
     fids = range(fr["startFace"], fr["startFace"] + fr["nFaces"])
     polys, cell = [], []

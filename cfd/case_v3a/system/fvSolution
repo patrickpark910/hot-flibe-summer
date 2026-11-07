@@ -43,6 +43,8 @@ SIMPLE
     nNonOrthogonalCorrectors 0;
     pRefCell        0;
     pRefValue       100000.0;
+    rhoMin          1729.8;   // rho at T_limits (startup safeguard)
+    rhoMax          2055.78;
     residualControl
     {
         p_rgh           1e-5;

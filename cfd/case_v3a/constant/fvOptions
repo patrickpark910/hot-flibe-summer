@@ -53,4 +53,21 @@ flibeHeating
                 eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
             }
     #};
+    codeCorrect
+    #{
+    #};
+    codeConstrain
+    #{
+    #};
+}
+
+// Startup safeguard (numerics only): clip T while the flow develops from rest.
+// Must clip no cells at convergence (post_cfd.py checks postProcessing/limitT).
+limitT
+{
+    type            limitTemperature;
+    selectionMode   all;
+    min             732;
+    max             1400;
+    writeToFile     true;
 }

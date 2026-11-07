@@ -32,8 +32,11 @@ def _strip(text: str) -> str:
 def _body(text: str) -> str:
     """Text after the FoamFile header block."""
     text = _strip(text)
-    m = re.search(r"FoamFile\s*\{[^}]*\}", text)
-    return text[m.end():] if m else text
+    m = re.search(r"FoamFile\s*\{", text)
+    if not m:
+        return text
+    _, end = _block(text, m.start())  # brace-matched: v2606 headers can nest a meta {...} block
+    return text[end:]
 
 
 def _list_at(text: str, pos: int):

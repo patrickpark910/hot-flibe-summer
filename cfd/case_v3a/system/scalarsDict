@@ -11,7 +11,8 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Frozen-flow isotope transport and mean age, run once on the converged flow:
+// Frozen-flow isotope transport, run once on the converged flow (mean age is
+// computed at the end of the flow run: 'age' in controlDict):
 //   buoyantSimpleFoam -postProcess -dict system/scalarsDict -time <latest>
 // Each isotope: div(phi C) - div((mut/Sct) grad C) = S - lambda rho C, C in atoms/kg.
 
@@ -73,6 +74,12 @@ functions
                             eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
                         }
                 #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
             }
         }
     }
@@ -131,6 +138,12 @@ functions
                         {
                             eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
                         }
+                #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
                 #};
             }
         }
@@ -191,6 +204,12 @@ functions
                             eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
                         }
                 #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
             }
         }
     }
@@ -250,17 +269,13 @@ functions
                             eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
                         }
                 #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
             }
         }
-    }
-    age
-    {
-        type            age;
-        libs            (fieldFunctionObjects);
-        phi             phi;
-        rho             rho;
-        nCorr           100;
-        tolerance       1e-09;
-        diffusion       on;   // muEff = mu + mut
     }
 }

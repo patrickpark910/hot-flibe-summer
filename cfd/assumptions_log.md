@@ -38,7 +38,7 @@ or the existing repo scripts quoted it from that reference.
 | OpenMC checks | TBR 1.208, total nuclear heating 1020.3 MW (1019.8 MW without magnets) | OPENMC. Accepted against "about 1.0–1.2 / about 1000 MW" (USER); the window coded is TBR 0.95–1.25 and heating 900–1100 MW (ASSUMPTION, mine) |
 | OpenMC mesh vs cell tallies | heating identical; isotope mesh sums 0.08–0.24 % below the cell tallies | OPENMC; cause unknown, not rescaled |
 | Python env | repo `.venv` (uv, Python 3.14, prompt "hot-flibe-summer") | ASSUMPTION (mine), accepted by user: no conda env of that name exists |
-| OpenFOAM | v2606 (OpenFOAM.com), `/usr/lib/openfoam/openfoam2606/etc/bashrc` | USER. **Not installed on this machine.** Keywords were verified against the v2606 source (gitlab.com/openfoam/core/openfoam, tag OpenFOAM-v2606, commit 481094fd) |
+| OpenFOAM | v2606 (OpenFOAM.com), `/usr/lib/openfoam/openfoam2606/etc/bashrc` | USER. Installed 2026-11-06 (apt `openfoam2606-default`, 2606.0~rc2). Keywords were verified against the v2606 source (gitlab.com/openfoam/core/openfoam, tag OpenFOAM-v2606, commit 481094fd) |
 
 ## 2. Machine and geometry (checks)
 
@@ -73,11 +73,12 @@ or the existing repo scripts quoted it from that reference.
 |---|---|---|
 | Density | 2413 − 0.488 T kg/m³ (valid 800–1080 K) | PUB [RH17], quoted by user |
 | Viscosity | 1.16e-4 exp(3755/T) Pa s (valid 873–1073 K, ±20 %) | PUB [RH17], quoted by user. **Extrapolated** to the 800 K inlet |
-| Viscosity in OpenFOAM | degree-4 polynomial fitted over 780–1050 K: max error 0.24 %, rms 0.054 %; positive over 700–1200 K | DERIVED. The rule "lowest degree with max error ≤ 1 %" is ASSUMPTION (mine). Degree 5 gives 0.04 % |
+| Viscosity in OpenFOAM | `tabulatedTransport` table of the Arrhenius law itself: 10 K spacing 700–2000 K, then ×1.1 steps to 1e5 K (173 points); linear-interpolation error ≤ 0.098 % over 700–1400 K, ≤ 0.77 % over the whole table (`CFG["mu_table"]`) | DERIVED; the spacing is ASSUMPTION (mine). Replaced the degree-4 polynomial (fit 780–1050 K) on 2026-11-06, because the polynomial diverges outside its range (×1145 at 2000 K) and the wall functions evaluate μ at the face (see section 11). The table runs to 1e5 K because v2606 `nonUniformTable` reads past the end of the table above its last point. Above 1073 K the law is extrapolated |
+| k in OpenFOAM | two-point table, 1.1 W/m/K from 700 K to 1e5 K | DERIVED (constant) |
 | cp, k | 2386 J/kg/K, 1.1 W/m/K | PUB [RH17], quoted by user |
 | Pr at 900 K | 16.3 | DERIVED (user: about 16) |
 | molWeight | 33 | USER (0.67 LiF – 0.33 BeF2; no effect) |
-| Thermo package | heRhoThermo / pureMixture / polynomial / hPolynomial / icoPolynomial / sensibleEnthalpy | USER; the combination was confirmed as instantiated in v2606 `rhoThermos.C` |
+| Thermo package | heRhoThermo / pureMixture / tabulated / hPolynomial / icoPolynomial / sensibleEnthalpy | USER chose polynomial transport; changed to `tabulated` transport for μ on 2026-11-06 with the user's agreement. The combination is instantiated in v2606 `rhoThermos.C` |
 
 ## 5. Cooling layout (V0 scheme on V3A)
 
@@ -164,7 +165,7 @@ that is OpenMC statistical noise.
 | Decay | implicit sink via `fvm::Sp(−λρ, C)` in a coded fvOption | USER (implicit); implementation mine |
 | Solve | once on the converged flow (frozen): `buoyantSimpleFoam -postProcess -dict system/scalarsDict -time <latest>`; up to 100 outer correctors, outer tolerance 1e-9 | ASSUMPTION (mine) |
 | Inlet concentration | 0 for all isotopes (once-through) | ASSUMPTION (mine), accepted. F-18 would really recirculate |
-| Mean age | OpenFOAM `age` FO, diffusion on: μ_eff = μ + μt (Sc = 1), not μt/Sct | USER (age FO). **Flagged 2026-11-05: v2606's `age` cannot use μt/Sct; awaiting your decision** |
+| Mean age | OpenFOAM `age` FO, diffusion on: μ_eff = μ + μt (Sc = 1), not μt/Sct; runs at the end of the flow run (`controlDict`, `executeControl onEnd`, `writeControl writeTime`) | USER (age FO). **Flagged 2026-11-05: v2606's `age` cannot use μt/Sct; awaiting your decision** |
 | Age distribution | flux-weighted histogram of local mean age over the outlet + mass-weighted histogram over the tank | ASSUMPTION (mine), accepted. A true RTD needs a transient tracer |
 
 ## 10. Source mapping
@@ -187,7 +188,10 @@ that is OpenMC statistical noise.
 | Residual control | p_rgh 1e-5, U 1e-6, h 1e-7, k/ε 1e-5 | ASSUMPTION (mine) |
 | Iterations | fine 5000 (write every 500), coarse 300 (every 100) | ASSUMPTION (mine) |
 | Processes | fine 8 (scotch), coarse 1 | ASSUMPTION (mine); the machine has 32 threads |
-| Coded fvOptions | need `wmake` and headers (`openfoam2606-dev` or `-default`) | note |
+| Coded fvOptions | need `wmake` and headers (`openfoam2606-dev` or `-default`); v2606 also requires `codeCorrect` and `codeConstrain` (written empty) | note |
+| T limiter | `limitTemperature` fvOption, all cells, 732–1400 K (`CFG["T_limits"]`) | ASSUMPTION (mine), numerics only. 732 K is the FLiBe freezing point; 1400 K is well above any expected cell temperature. It never clipped a cell in the first coarse run (cell T 800–919 K); kept as a guard. Must clip nothing at convergence: `post_cfd.py` reports it from `postProcessing/limitT` |
+| ρ clamp | SIMPLE `rhoMin` 1729.8, `rhoMax` 2055.78 kg/m³ (ρ at the T limits) | ASSUMPTION (mine). This is what stops the crash: the first-wall FACE temperatures reached > 4945 K, where ρ(T) ≤ 0, and the v2606 default `rhoMin` 0 then divides by zero. It clamps those wall faces on every iteration, so it hides the problem below rather than fixing it |
+| **Wall-face hot spots (open)** | polynomial μ, 300 it: `fw_*` faces 2000–5800 K, y+ 0.00–0.08. Tabulated μ, 300 it: `fw_*` face median 1105–1182 K, y+ median 57–127; 48 of ~4700 heated-wall faces still above 1400 K, hottest 3018 K at R 3.662 m, Z −2.089 m (the `lower_inboard` junction corner) | The polynomial μ grew outside its fit range (×1145 at 2000 K) and the Spalding/Jayatilleke wall functions evaluate μ at the face: hot face → huge μ and Pr → huge thermal resistance → hotter face. Fixed by the tabulated μ (section 4). The remaining hot spots are local, mostly at corners; the run is not converged (p_rgh residual ~0.3, energy balance −52 % at 300 it). `post_cfd.py` lists faces outside `T_limits` (where ρ is clamped). Recheck on a converged run |
 
 ---
 
@@ -202,3 +206,5 @@ that is OpenMC statistical noise.
 | 2026-11-05 | Verified the v2606 keywords in the source: `externalWallHeatFluxTemperature mode power`, `scalarTransport` (D = alphaD·μ + alphaDt·μt; field read from the current time; outer tolerance default 1 → set 1e-9), `age` (diffusivity μ_eff, Sc = 1), `scalarCodedSource` with `codeAddSupRho`, the polynomial thermo combination, `flowRateInletVelocity massFlowRate`, `prghPressure p`, gmshToFoam physical names → patches and cellZones, and that the `-dict` file merges into controlDict |
 | 2026-11-05 | Wrote the mesh, case, mapping and post-processing. Fine mesh 55,459 cells. Mapping and post tested offline on synthetic cases; nothing has been run in OpenFOAM yet |
 | 2026-11-05 | Open item: `age` diffusivity (μ + μt) differs from the isotopes' μt/Sct. Options: keep it; turn diffusion off; or compute age with `scalarTransport` (source ρ, D = μt/Sct) for consistency |
+| 2026-11-06 | OpenFOAM v2606 installed; first runs. Fixed `foam_io._body` (v2606 headers nest a `meta {}` block, which broke the `cellZones` read) and added the mandatory empty `codeCorrect`/`codeConstrain` to the coded sources. The first flow iteration crashed on ρ = 0; the user accepted the T limiter and ρ clamp (section 11), proposed as a fix for a cell-temperature runaway. The run then showed the cells were fine and the zero ρ was on the first-wall faces, caused by μ-polynomial extrapolation in the wall functions (open item, section 11). Coarse pipeline runs end to end (flow + scalars 41 s) but is not converged in 300 iterations (energy balance −50 %). `Allrun` now prints the end of the failing log. Then, with the user's agreement, μ switched to a `tabulatedTransport` Arrhenius table (section 4): first-wall faces dropped from 2000–5800 K to a median of ~1150 K. `Allrun flow`/`scalars` print a progress line every `PROGRESS_EVERY` s (default 10) |
+| 2026-11-06 | Found that the mean age had never been computed: in `buoyantSimpleFoam -postProcess` the v2606 `age` FO looks up `phi` in its constructor, before the solver creates it, so it was dropped with only a warning. Moved `age` to `controlDict` (runs once at the end of the flow run). `maps.png` now uses matplotlib `coolwarm` (user). First age result (coarse, 2100 it, not converged): outlet flow-weighted mean age 36 s vs M/ṁ 171 s, a gap the check flags; recheck when converged |

@@ -42,9 +42,8 @@ assumptions live in the single `CFG` block at the top of
   - The heat source and the isotope decay are coded fvOptions, so they are
     compiled at run time. That needs `wmake` and the OpenFOAM headers
     (`openfoam2606-dev`, or the `openfoam2606-default` meta-package).
-  - **OpenFOAM is not installed on this machine yet.** Every keyword was checked
-    against the v2606 source (gitlab.com/openfoam/core/openfoam, tag
-    `OpenFOAM-v2606`), but none of the OpenFOAM steps has been run.
+  - Installed here as apt `openfoam2606-default` (2606.0~rc2). The gmsh wheel
+    in `.venv` also needs the system `libGLU.so.1` (`sudo apt install libglu1-mesa`).
 
 ## How to run
 
@@ -60,7 +59,7 @@ cd cfd/case_v3a && ./Allrun mesh
 # 3. Python env: map OpenMC heating and isotope production onto the FLiBe cells
 .venv/bin/python cfd/make_case.py map
 
-# 4. OpenFOAM shell: flow (buoyantSimpleFoam), then frozen-flow isotopes + age
+# 4. OpenFOAM shell: flow (buoyantSimpleFoam; mean age at its end), then frozen-flow isotopes
 ./Allrun solve
 
 # 5. Python env: report and maps (case_v3a/postProcessing/post_cfd/)
@@ -73,6 +72,9 @@ cd cfd/case_v3a && ./Allrun mesh
   iterations, 8 MPI processes. Run the smoke test first. Ask before any run
   expected to take more than 30 minutes.
 - `./Allrun flow` and `./Allrun scalars` can also be run separately.
+- While they run, a status line (iteration, residuals, cell T max, outlet T, time
+  left) prints every 10 s; `PROGRESS_EVERY=30 ./Allrun solve` changes the interval.
+  The full solver output is in `log.buoyantSimpleFoam` (`.scalars` for the scalars).
 - `./Allclean` removes OpenFOAM outputs and keeps `v3a.msh`, the 0/ base
   fields, `constant/` and `system/`.
 
@@ -107,8 +109,11 @@ cd cfd/case_v3a && ./Allrun mesh
   every edge internal or on exactly one patch, and zone volumes.
 
 **Energy.**
-- `buoyantSimpleFoam` with `heRhoThermo` and polynomial FLiBe properties
-  (Romatoski & Hu 2017). μ(T) is a degree-4 fit over 780–1050 K (max error 0.24 %).
+- `buoyantSimpleFoam` with `heRhoThermo` and FLiBe properties from Romatoski &
+  Hu 2017: polynomial ρ and cp, and μ(T) as a `tabulatedTransport` table of the
+  Arrhenius law (700 K–1e5 K, interpolation error ≤ 0.1 % below 1400 K). A
+  polynomial μ diverges outside its fit range, and the wall functions see
+  wall-face temperatures well above the cell temperatures.
 - Volumetric FLiBe heating is a nonuniform field, `0/qFlibe`, added to h
   through a coded fvOption.
 - Each wall gets its OpenMC total plus surface heat through
@@ -124,7 +129,11 @@ cd cfd/case_v3a && ./Allrun mesh
 - S is read from `0/S_<iso>` and added explicitly; decay is an implicit sink.
 - Half-lives come from `openmc.data.half_life()`.
 
-**Mean age.** OpenFOAM's `age` function object, with diffusion on.
+**Mean age.** OpenFOAM's `age` function object, with diffusion on. It runs once at the
+end of the flow run (`executeControl onEnd` in `controlDict`), not in the scalars step:
+in `buoyantSimpleFoam -postProcess` v2606 builds it before `phi` exists and silently
+drops it. It is saved only if the last iteration is a write time, so keep `endTime` a
+multiple of `writeInterval` (`./Allrun flow` warns otherwise).
 
 **Source mapping.**
 - Each OpenMC bin's FLiBe total is spread over the FLiBe cells whose centres lie

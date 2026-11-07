@@ -25,7 +25,7 @@ Subcommands (run in the "hot-flibe-summer" Python environment, not OpenFOAM's)
     python cfd/make_case.py build [--coarse]
         Everything in 'circuits', plus: 2D Gmsh mesh of the FLiBe domain,
         extruded here into a one-cell wedge and written as Gmsh 2.2 (v3a.msh),
-        checked in Python; viscosity fit; and the whole OpenFOAM case
+        checked in Python; viscosity table; and the whole OpenFOAM case
         cfd/case_v3a/ (0/, constant/, system/, Allrun, Allclean,
         case_summary.json). --coarse makes the smoke-test mesh and run length.
 
@@ -36,7 +36,7 @@ Subcommands (run in the "hot-flibe-summer" Python environment, not OpenFOAM's)
         FLiBe cells (needs 0/C and 0/V from './Allrun mesh') and writes
         0/qFlibe and 0/S_<isotope>. Stops if any total is off by > 1 %.
 
-    (OpenFOAM shell)  ./Allrun solve       # flow, then frozen-flow scalars + age
+    (OpenFOAM shell)  ./Allrun solve       # flow (+ mean age at its end), then frozen-flow isotopes
     python cfd/post_cfd.py
 
 Every modelling choice that is not a published value is marked ASSUMPTION
@@ -93,7 +93,13 @@ CFG = dict(
     kappa=1.1,                 # W/m/K
     rho_coeffs=(2413.0, -0.488),            # kg/m3, valid 800-1080 K
     mu_arrhenius=(1.16e-4, 3755.0),         # Pa s = A exp(B/T), valid 873-1073 K
-    mu_fit_range=(780.0, 1050.0),           # polynomial fit range for OpenFOAM
+    # OpenFOAM gets mu(T) as a tabulatedTransport table of the Arrhenius law itself:
+    # dT spacing over [T0, T1], then geometric spacing to T_top. The law falls
+    # monotonically to A > 0, so it is safe at any T. T_top must exceed any face T:
+    # v2606 nonUniformTable reads past the end of the table above its last point.
+    # (A polynomial fit diverges outside its range, which made the first-wall faces
+    # run away through the wall functions; see assumptions_log.md section 4.)
+    mu_table=dict(T0=700.0, T1=2000.0, dT=10.0, T_top=1.0e5, ratio=1.1),
     molWeight=33.0,            # 0.67 LiF - 0.33 BeF2; no effect here
 
     # ---- cooling circuits (V0 scheme on V3A: ASSUMPTION) ---------------------
@@ -177,10 +183,15 @@ CFG = dict(
     end_iterations=dict(fine=5000, coarse=300),
     write_interval=dict(fine=500, coarse=100),
     n_procs=dict(fine=8, coarse=1),    # 1 = serial
+    # ASSUMPTION: safeguards (numerics only). rhoMin/rhoMax in SIMPLE are rho at these
+    # limits; with the old mu polynomial the first-wall FACE temperatures (> 4945 K,
+    # where rho(T) <= 0) gave rho = 0 and a divide by zero on iteration 1.
+    # limitTemperature clips CELL T. post_cfd.py reports both: the limiter status and
+    # the wall faces whose rho is clamped. Neither should be active at convergence.
+    T_limits=(732.0, 1400.0),  # K: FLiBe freezing point / well above any expected T
     scalar_nCorr=100,          # outer correctors of the frozen-flow scalar solves
     scalar_tolerance=1e-9,
     age_diffusion=True,        # OpenFOAM age FO: diffusivity muEff = mu + mut (Sc = 1)
-    mu_fit_max_rel_err=0.01,   # ASSUMPTION: lowest polynomial degree meeting this
     openfoam_bashrc="/usr/lib/openfoam/openfoam2606/etc/bashrc",
 )
 
@@ -714,36 +725,23 @@ def plot_circuits(geo: dict, fl: dict, path: Path):
 
 
 # =============================================================================
-# Viscosity fit and decay data
+# Viscosity table and decay data
 # =============================================================================
-def _poly_eval(c, T):
-    """Sum c_i T^i the way OpenFOAM's Polynomial::value does (powers, not Horner)."""
-    val, powT = np.zeros_like(T), np.ones_like(T)
-    for ci in c:
-        val = val + ci * powT
-        powT = powT * T
-    return val
-
-
-def fit_viscosity() -> dict:
-    """Polynomial in T for A exp(B/T) over mu_fit_range: lowest degree whose max
-    relative error (evaluated exactly as OpenFOAM does) is within mu_fit_max_rel_err."""
+def viscosity_table() -> dict:
+    """mu = A exp(B/T) as (T, mu) points for OpenFOAM tabulatedTransport (linear
+    interpolation). Reports the interpolation error evaluated the way OpenFOAM does."""
     A, B = CFG["mu_arrhenius"]
-    T0, T1 = CFG["mu_fit_range"]
-    T = np.linspace(T0, T1, 1000)
+    t = CFG["mu_table"]
+    T = list(np.arange(t["T0"], t["T1"] + 0.5 * t["dT"], t["dT"]))
+    while T[-1] < t["T_top"]:
+        T.append(min(T[-1] * t["ratio"], t["T_top"]))
+    T = np.array(T)
     mu = A * np.exp(B / T)
-    rows = []
-    for deg in range(2, 8):                     # OpenFOAM Polynomial<8>: degree <= 7
-        c = np.polynomial.Polynomial.fit(T, mu, deg).convert().coef
-        err = _poly_eval(c, T) / mu - 1.0
-        rows.append(dict(deg=deg, coeffs=[float(x) for x in c], max_err=float(np.abs(err).max()),
-                         rms_err=float(np.sqrt(np.mean(err ** 2)))))
-    ok = [r for r in rows if r["max_err"] <= CFG["mu_fit_max_rel_err"]]
-    best = dict(ok[0] if ok else min(rows, key=lambda r: r["max_err"]))
-    Tw = np.linspace(T0 - 80.0, T1 + 150.0, 500)
-    best["min_mu_700_1200K"] = float(_poly_eval(best["coeffs"], Tw).min())
-    best["table"] = [{k: r[k] for k in ("deg", "max_err", "rms_err")} for r in rows]
-    return best
+    out = dict(points=[(float(x), float(y)) for x, y in zip(T, mu)], n=len(T))
+    for key, (lo, hi) in (("max_err_700_1400K", (700.0, 1400.0)), ("max_err_all", (T[0], T[-1]))):
+        Te = np.linspace(lo, hi, 200001)
+        out[key] = float(np.abs(np.interp(Te, T, mu) / (A * np.exp(B / Te)) - 1.0).max())
+    return out
 
 
 def decay_data() -> dict:
@@ -1270,15 +1268,20 @@ def _coded_source(entry: str, field: str, source: str, lam: float, indent: str =
             f"    fields          ({field});\n    name            flibeVolumeSource;\n"
             f"    sourceField     {source};\n    lambda          {lam:.10g};   // 1/s\n"
             "    codeInclude\n    #{\n        #include \"fvm.H\"\n    #};\n"
-            "    codeAddSupRho\n    #{\n" + _CODED + "\n    #};\n}\n")
+            "    codeAddSupRho\n    #{\n" + _CODED + "\n    #};\n"
+            # v2606 CodedFvSource::read() makes codeCorrect and codeConstrain mandatory
+            "    codeCorrect\n    #{\n    #};\n"
+            "    codeConstrain\n    #{\n    #};\n}\n")
     return "".join(indent + ln + "\n" if ln else "\n" for ln in body.splitlines())
 
 
-def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
+def write_case(case: Path, geo, loads, fl, P, mu_tab, decay, level, mesh_rep):
     (case / "constant").mkdir(parents=True, exist_ok=True)
     (case / "system").mkdir(parents=True, exist_ok=True)
     write_fields(case, P)
     H = foam_io.header
+    A_mu, B_mu = CFG["mu_arrhenius"]
+    mu_pts = mu_tab["points"]
     th = 1.0 / CFG["Sct"]
     c8 = lambda c: "(" + " ".join(f"{x:.12g}" for x in (list(c) + [0.0] * 8)[:8]) + ")"
     # ---- constant ----
@@ -1287,18 +1290,22 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
         "dimensions      [0 1 -2 0 0 0 0];\nvalue           (0 0 -9.81);\n")
     (case / "constant" / "thermophysicalProperties").write_text(
         H("dictionary", "thermophysicalProperties", "constant") +
-        "// FLiBe, Romatoski & Hu 2017 (T in K). mu: polynomial fit of 1.16e-4 exp(3755/T)\n"
-        f"// over {CFG['mu_fit_range'][0]:.0f}-{CFG['mu_fit_range'][1]:.0f} K, degree {mu_fit['deg']}, "
-        f"max error {100 * mu_fit['max_err']:.2f} %, rms {100 * mu_fit['rms_err']:.2f} %.\n\n"
+        f"// FLiBe, Romatoski & Hu 2017 (T in K). mu: table of {A_mu:g} exp({B_mu:g}/T), {mu_tab['n']} points,\n"
+        f"// {mu_pts[0][0]:g}-{mu_pts[-1][0]:g} K; linear-interpolation error {100 * mu_tab['max_err_700_1400K']:.3f} % "
+        f"(700-1400 K), {100 * mu_tab['max_err_all']:.3f} % (whole table).\n"
+        "// The table must cover every face T: v2606 nonUniformTable reads past its end above the last point.\n\n"
         "thermoType\n{\n    type            heRhoThermo;\n    mixture         pureMixture;\n"
-        "    transport       polynomial;\n    thermo          hPolynomial;\n"
+        "    transport       tabulated;\n    thermo          hPolynomial;\n"
         "    equationOfState icoPolynomial;\n    specie          specie;\n    energy          sensibleEnthalpy;\n}\n\n"
         "mixture\n{\n    specie\n    {\n        molWeight       " + f"{CFG['molWeight']};\n    }}\n"
         "    equationOfState\n    {\n        rhoCoeffs<8>    " + c8(CFG["rho_coeffs"]) + ";\n    }\n"
         "    thermodynamics\n    {\n        Hf              0;\n        Sf              0;\n"
         "        CpCoeffs<8>     " + c8([CFG["cp"]]) + ";\n    }\n"
-        "    transport\n    {\n        muCoeffs<8>     " + c8(mu_fit["coeffs"]) + ";\n"
-        "        kappaCoeffs<8>  " + c8([CFG["kappa"]]) + ";\n    }\n}\n")
+        "    transport\n    {\n        mu\n        (\n"
+        + "".join(f"            ({T_:.10g} {m_:.10g})\n" for T_, m_ in mu_pts) +
+        "        );\n        kappa\n        (\n"
+        f"            ({mu_pts[0][0]:g} {CFG['kappa']:g})\n            ({mu_pts[-1][0]:g} {CFG['kappa']:g})\n"
+        "        );\n    }\n}\n")
     (case / "constant" / "turbulenceProperties").write_text(
         H("dictionary", "turbulenceProperties", "constant") +
         "simulationType  RAS;\n\nRAS\n{\n" + f"    RASModel        {CFG['turbulence_model']};\n"
@@ -1306,7 +1313,12 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
     (case / "constant" / "fvOptions").write_text(
         H("dictionary", "fvOptions", "constant") +
         "// OpenMC nuclear heating in the FLiBe (W/m3), mapped conservatively by make_case.py map\n\n" +
-        _coded_source("flibeHeating", "h", "qFlibe", 0.0))
+        _coded_source("flibeHeating", "h", "qFlibe", 0.0) +
+        "\n// Startup safeguard (numerics only): clip T while the flow develops from rest.\n"
+        "// Must clip no cells at convergence (post_cfd.py checks postProcessing/limitT).\n"
+        f"limitT\n{{\n    type            limitTemperature;\n    selectionMode   all;\n"
+        f"    min             {CFG['T_limits'][0]:g};\n    max             {CFG['T_limits'][1]:g};\n"
+        "    writeToFile     true;\n}\n")
     # ---- system ----
     n_end, n_wr = CFG["end_iterations"][level], CFG["write_interval"][level]
     fo = ("functions\n{\n"
@@ -1323,7 +1335,18 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
           "        weightField     phi;\n        fields          (T);\n        writeFields     false;\n"
           "        writeControl    timeStep;\n        writeInterval   10;\n    }\n"
           "    TminMax\n    {\n        type            fieldMinMax;\n        libs            (fieldFunctionObjects);\n"
-          "        fields          (T U);\n        writeControl    timeStep;\n        writeInterval   10;\n    }\n}\n")
+          "        fields          (T U);\n        writeControl    timeStep;\n        writeInterval   10;\n    }\n"
+          # Mean age on the final flow field. It must run inside the flow run: in
+          # 'solver -postProcess' the age FO is built before phi exists, fails its phi
+          # lookup and is silently dropped (v2606 age::read). onEnd also fires when
+          # residualControl stops the run early (writeAndEnd moves endTime). Written only
+          # if the final iteration is a write time, so it never makes a time folder that
+          # lacks the flow fields.
+          "    age\n    {\n        type            age;\n        libs            (fieldFunctionObjects);\n"
+          "        phi             phi;\n        rho             rho;\n"
+          f"        nCorr           {CFG['scalar_nCorr']};\n        tolerance       {CFG['scalar_tolerance']};\n"
+          f"        diffusion       {'on' if CFG['age_diffusion'] else 'off'};   // muEff = mu + mut\n"
+          "        executeControl  onEnd;\n        writeControl    writeTime;\n    }\n}\n")
     (case / "system" / "controlDict").write_text(
         H("dictionary", "controlDict", "system") +
         "application     buoyantSimpleFoam;\nstartFrom       latestTime;\nstartTime       0;\n"
@@ -1354,7 +1377,10 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
         "    \"(C_.*|age)\"\n    {\n        solver          PBiCGStab;\n        preconditioner  DILU;\n"
         "        tolerance       1e-14;\n        relTol          1e-6;\n        maxIter         20000;\n    }\n}\n\n"
         "SIMPLE\n{\n    momentumPredictor yes;\n    nNonOrthogonalCorrectors 0;\n    pRefCell        0;\n"
-        f"    pRefValue       {CFG['p_out']};\n    residualControl\n    {{\n        p_rgh           1e-5;\n"
+        f"    pRefValue       {CFG['p_out']};\n"
+        f"    rhoMin          {rho_flibe(CFG['T_limits'][1]):.6g};   // rho at T_limits (startup safeguard)\n"
+        f"    rhoMax          {rho_flibe(CFG['T_limits'][0]):.6g};\n"
+        "    residualControl\n    {\n        p_rgh           1e-5;\n"
         "        U               1e-6;\n        h               1e-7;\n        \"(k|epsilon)\"   1e-5;\n    }\n}\n\n"
         "relaxationFactors\n{\n    fields\n    {\n        rho             1.0;\n        p_rgh           0.7;\n    }\n"
         "    equations\n    {\n        U               0.3;\n        h               0.3;\n"
@@ -1379,19 +1405,16 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
                "        bounded01       false;\n        resetOnStartUp  false;\n        fvOptions\n        {\n"
                + _coded_source(f"source_{iso}", f"C_{iso}", f"S_{iso}", lam, indent="            ")
                + "        }\n    }\n")
-    sc += ("    age\n    {\n        type            age;\n        libs            (fieldFunctionObjects);\n"
-           "        phi             phi;\n        rho             rho;\n"
-           f"        nCorr           {CFG['scalar_nCorr']};\n        tolerance       {CFG['scalar_tolerance']};\n"
-           f"        diffusion       {'on' if CFG['age_diffusion'] else 'off'};   // muEff = mu + mut\n    }}\n")
     (case / "system" / "scalarsDict").write_text(
         H("dictionary", "scalarsDict", "system") +
-        "// Frozen-flow isotope transport and mean age, run once on the converged flow:\n"
+        "// Frozen-flow isotope transport, run once on the converged flow (mean age is\n"
+        "// computed at the end of the flow run: 'age' in controlDict):\n"
         "//   buoyantSimpleFoam -postProcess -dict system/scalarsDict -time <latest>\n"
         "// Each isotope: div(phi C) - div((mut/Sct) grad C) = S - lambda rho C, C in atoms/kg.\n\n"
         "functions\n{\n" + sc + "}\n")
     write_scripts(case, level)
     summary = dict(level=level, wedge_deg=CFG["wedge_deg"], T_in=CFG["T_in"], cp=CFG["cp"],
-                   rho_coeffs=CFG["rho_coeffs"], mu_fit=mu_fit, decay=decay, Sct=CFG["Sct"],
+                   rho_coeffs=CFG["rho_coeffs"], mu_table={k: v for k, v in mu_tab.items() if k != "points"}, T_limits=list(CFG["T_limits"]), decay=decay, Sct=CFG["Sct"],
                    openmc_run=str(CFG["openmc_run"]), patches=P,
                    heat_W=dict(total=fl["Q_total"], **{k: v for k, v in loads["totals"].items()},
                                surface=1e6 * (CFG["P_alpha_MW"] + CFG["P_aux_MW"])),
@@ -1401,6 +1424,45 @@ def write_case(case: Path, geo, loads, fl, P, mu_fit, decay, level, mesh_rep):
     (case / "case_summary.json").write_text(json.dumps(summary, indent=1, default=float))
 
 
+# Progress lines for ./Allrun flow / scalars. The solver still writes only to its log;
+# a watcher reads that log every PROGRESS_EVERY seconds (default 10) and prints one line.
+_ALLRUN_PROGRESS = r"""
+# ---- progress: one status line every PROGRESS_EVERY s (default 10) from the log ----
+status() {  # status <log> [endTime] [final]: last complete iteration (flow) or scalar solve
+    { if [ -n "${2:-}" ]; then tail -n 600 "$1"; else cat "$1"; fi; } 2>/dev/null | awk -v end="${2:-}" -v final="${3:-}" '
+        function hms(x) { x = int(x); return (x >= 3600 ? int(x / 3600) "h" : "") \
+                          sprintf("%dm%02ds", int(x % 3600 / 60), x % 60) }
+        function snap(f) { di = it; dX = xt; dT = tmax; dC = clip; dO = tout
+                           split("", d); for (f in r) d[f] = r[f]
+                           if (fi == "") { fi = di; fx = dX } }
+        /^Time = / { if (it != "") snap(); it = $3 + 0; split("", r); clip = 0 }
+        / Solving for / { f = $4; sub(/,$/, "", f); v = $8; sub(/,$/, "", v)
+                          if (!(f in r)) r[f] = v + 0; nc = (f == sf) ? nc + 1 : 1; sf = f; sv = v + 0 }
+        /^limitTemperature=/ { split($0, a, "LimitedCells="); clip += a[2] + 0
+                               if (/Type=Upper/) { split($0, b, "UnlimitedTmax="); tmax = b[2] + 0 } }
+        /^ExecutionTime = / { xt = $3 + 0 }
+        /weightedAverage\(outlet\) of T/ { tout = $NF }
+        END {
+            if (final != "" && it != "") snap()
+            if (end == "") { if (sf != "") printf "  scalars: %-6s outer corrector %3d, residual %.2e\n", sf, nc, sv; exit }
+            if (di == "") exit
+            u = d["Ux"]; if (d["Uy"] > u) u = d["Uy"]; if (d["Uz"] > u) u = d["Uz"]
+            left = (di > fi && dX > fx) ? hms((end - di) * (dX - fx) / (di - fi)) : "?"
+            printf "  iter %5d/%d (%3d%%)  res p_rgh %.1e U %.1e h %.1e k %.1e eps %.1e | cell Tmax %.0f K, clipped %d | T out %.1f K | %s elapsed, ~%s left\n",
+                   di, end, 100 * di / end, d["p_rgh"], u, d["h"], d["k"], d["epsilon"], dT, dC, dO, hms(dX), left
+        }'
+}
+progress() {  # progress <log> [endTime] &   (killed by the caller when the solver ends)
+    local prev="" line
+    while sleep "${PROGRESS_EVERY:-10}"; do
+        line=$(status "$@")
+        [ -n "$line" ] && [ "$line" != "$prev" ] && echo "$line" && prev=$line
+    done
+}
+watch_start() { progress "$@" 2>/dev/null & WATCH_PID=$!; trap 'pkill -P $WATCH_PID 2>/dev/null; kill $WATCH_PID 2>/dev/null' EXIT; }
+watch_stop() { pkill -P "$WATCH_PID" 2>/dev/null; kill "$WATCH_PID" 2>/dev/null; wait "$WATCH_PID" 2>/dev/null; trap - EXIT; }
+"""
+
 def write_scripts(case: Path, level: str):
     np_ = max(CFG["n_procs"][level], 1)
     allrun = f"""#!/bin/bash
@@ -1408,8 +1470,8 @@ def write_scripts(case: Path, level: str):
 # ARC V3A FLiBe blanket - OpenFOAM steps (generated by cfd/make_case.py)
 #   ./Allrun mesh      gmshToFoam, patch types, checkMesh, cell centres/volumes
 #   (Python env)       python cfd/make_case.py map
-#   ./Allrun flow      buoyantSimpleFoam (parallel when NP > 1)
-#   ./Allrun scalars   frozen-flow isotope transport + mean age, latest time
+#   ./Allrun flow      buoyantSimpleFoam (parallel when NP > 1); mean age at the end
+#   ./Allrun scalars   frozen-flow isotope transport, latest time
 #   ./Allrun solve     flow, then scalars
 # Run in a shell where conda / the Python venv is NOT active.
 #------------------------------------------------------------------------------
@@ -1426,34 +1488,57 @@ if [ -z "${{WM_PROJECT_DIR:-}}" ]; then
 fi
 . "${{WM_PROJECT_DIR:?}}"/bin/tools/RunFunctions
 
-latestTime() {{ foamListTimes -latestTime -noZero 2>/dev/null | tail -n 1; }}
-
+# latest time folder that holds a saved flow field (phi), not just a function-object field
+latestTime() {{ local t last=""; for t in $(foamListTimes -noZero 2>/dev/null); do [ -f "$t/phi" ] && last=$t; done; echo "$last"; }}
+# on failure, show the end of the newest log (runApplication sends all output there)
+fail() {{ log=$(ls -t log.* 2>/dev/null | head -n 1); echo "FAILED - last lines of $log:" >&2;
+          [ -n "$log" ] && tail -n 30 "$log" >&2; exit 1; }}
+{_ALLRUN_PROGRESS}
 do_mesh() {{
-    runApplication -o gmshToFoam v3a.msh || exit 1
-    runApplication -o changeDictionary || exit 1
-    runApplication -o checkMesh || exit 1
+    runApplication -o gmshToFoam v3a.msh || fail
+    runApplication -o changeDictionary || fail
+    runApplication -o checkMesh || fail
     grep -q "Mesh OK" log.checkMesh || {{ echo "checkMesh FAILED - see log.checkMesh" >&2; exit 1; }}
-    runApplication -o -s cellCentres postProcess -func writeCellCentres -time 0 || exit 1
-    runApplication -o -s cellVolumes postProcess -func writeCellVolumes -time 0 || exit 1
+    runApplication -o -s cellCentres postProcess -func writeCellCentres -time 0 || fail
+    runApplication -o -s cellVolumes postProcess -func writeCellVolumes -time 0 || fail
     echo "Mesh done. Next, in the Python env: python cfd/make_case.py map"
 }}
 
 do_flow() {{
     [ -f 0/qFlibe ] || {{ echo "0/qFlibe missing: run 'python cfd/make_case.py map' first" >&2; exit 1; }}
+    end=$(foamDictionary system/controlDict -entry endTime -value)
+    wi=$(foamDictionary system/controlDict -entry writeInterval -value)
+    awk -v e="$end" -v w="$wi" 'BEGIN {{ exit !(e % w != 0) }}' && echo "  WARNING: endTime $end is not a multiple of writeInterval $wi:" \
+        "the last iterations (and the mean age) will not be saved" >&2
+    echo "  (progress every ${{PROGRESS_EVERY:-10}} s; full output in log.buoyantSimpleFoam)"
+    [ "$NP" -gt 1 ] && {{ runApplication -o decomposePar -force || fail; }}
+    watch_start log.buoyantSimpleFoam "$end"
     if [ "$NP" -gt 1 ]; then
-        runApplication -o decomposePar -force || exit 1
-        runParallel -o -np "$NP" buoyantSimpleFoam || exit 1
-        runApplication -o reconstructPar -latestTime || exit 1
+        runParallel -o -np "$NP" buoyantSimpleFoam || {{ watch_stop; fail; }}
     else
-        runApplication -o buoyantSimpleFoam || exit 1
+        runApplication -o buoyantSimpleFoam || {{ watch_stop; fail; }}
     fi
+    watch_stop
+    status log.buoyantSimpleFoam "$end" final
+    if grep -q "solution converged" log.buoyantSimpleFoam; then
+        echo "  flow converged: $(grep -m1 'solution converged' log.buoyantSimpleFoam)"
+    else
+        echo "  flow stopped at endTime $end without meeting the residualControl targets"
+    fi
+    [ "$NP" -gt 1 ] && {{ runApplication -o reconstructPar -latestTime || fail; }}
+    t=$(latestTime)
+    if [ -f "$t/age" ]; then echo "  mean age written to $t/age"
+    else echo "  WARNING: no $t/age - see the 'age' lines in log.buoyantSimpleFoam" >&2; fi
 }}
 
 do_scalars() {{
     t=$(latestTime)
     [ -n "$t" ] || {{ echo "no solution time directory found" >&2; exit 1; }}
     for f in 0/C_*; do cp "$f" "$t"/; done
-    runApplication -o -s scalars buoyantSimpleFoam -postProcess -dict system/scalarsDict -time "$t" || exit 1
+    echo "  (progress every ${{PROGRESS_EVERY:-10}} s; full output in log.buoyantSimpleFoam.scalars)"
+    watch_start log.buoyantSimpleFoam.scalars
+    runApplication -o -s scalars buoyantSimpleFoam -postProcess -dict system/scalarsDict -time "$t" || {{ watch_stop; fail; }}
+    watch_stop
     echo "Scalars done (time $t). Next, in the Python env: python cfd/post_cfd.py"
 }}
 
@@ -1606,12 +1691,10 @@ def cmd_build(args):
     level = "coarse" if args.coarse else "fine"
     om, geo, loads, fl = prepare()
     plot_circuits(geo, fl, Path(CFG["circuits_png"]))
-    mu = fit_viscosity()
-    print(f"\nViscosity fit {CFG['mu_fit_range'][0]:.0f}-{CFG['mu_fit_range'][1]:.0f} K: degree {mu['deg']}, "
-          f"max rel. error {100 * mu['max_err']:.3f} %, rms {100 * mu['rms_err']:.3f} % "
-          f"(min mu 700-1200 K: {mu['min_mu_700_1200K']:.3e} Pa s)")
-    for r in mu["table"]:
-        print(f"    degree {r['deg']}: max {100 * r['max_err']:.3f} %, rms {100 * r['rms_err']:.3f} %")
+    mu = viscosity_table()
+    print(f"\nViscosity table (tabulatedTransport): {mu['n']} points {mu['points'][0][0]:g}-{mu['points'][-1][0]:g} K, "
+          f"interpolation error {100 * mu['max_err_700_1400K']:.3f} % (700-1400 K), "
+          f"{100 * mu['max_err_all']:.3f} % (whole table)")
     A, B = CFG["mu_arrhenius"]
     print(f"  Pr at 900 K = {A * math.exp(B / 900.0) * CFG['cp'] / CFG['kappa']:.1f}")
     decay = decay_data()
