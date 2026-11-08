@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p_rgh;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 100000.0;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    inlet_udiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    inlet_outboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    inlet_ldiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    inlet_bypass
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    outlet
+    {
+        type            prghPressure;
+        rho             rho;
+        p               uniform 100000.0;
+        value           uniform 100000.0;
+    }
+    fw_inboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    vvGap_inboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    fw_udiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    vvGap_udiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    fw_outboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    vvGap_outboard
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    fw_ldiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    vvGap_ldiv
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    vvBulk
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    shield
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    tank
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    baffles
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+    openingSides
+    {
+        type            fixedFluxPressure;
+        value           uniform 100000.0;
+    }
+}

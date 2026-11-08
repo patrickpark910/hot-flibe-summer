@@ -67,8 +67,8 @@ cd cfd/case_v3a && ./Allrun mesh
 ```
 
 **Smoke test vs. full run:**
-- `--coarse` gives about 16k cells and 300 iterations, run serially.
-- Without `--coarse`: about 55k cells (7.8 cells across the gap), 5000
+- `--coarse` gives about 16k cells and 10000 iterations, run serially.
+- Without `--coarse`: about 55k cells (7.8 cells across the gap), 30000
   iterations, 8 MPI processes. Run the smoke test first. Ask before any run
   expected to take more than 30 minutes.
 - `./Allrun flow` and `./Allrun scalars` can also be run separately.

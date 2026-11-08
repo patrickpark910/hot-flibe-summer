@@ -1,0 +1,349 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Transient copy of cfd/case_v3a (hand-edited; NOT written by make_case.py).
+  Starts from the steady buoyantSimpleFoam result (iteration 10000) and runs
+  buoyantPimpleFoam in physical time. Isotopes are transported every time step
+  (blocks copied from cfd/case_v3a/system/scalarsDict, nCorr 100 -> 1).
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     buoyantPimpleFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         10;            // s of physical time (short speed test)
+deltaT          1e-4;          // s, initial; then set by maxCo
+adjustTimeStep  yes;
+maxCo           0.5;
+maxDeltaT       0.05;
+writeControl    adjustableRunTime;
+writeInterval   0.5;           // s between saved frames
+purgeWrite      0;             // keep every frame
+writeFormat     ascii;
+writePrecision  12;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+
+functions
+{
+    solverInfo
+    {
+        type            solverInfo;
+        libs            (utilityFunctionObjects);
+        fields          (U p_rgh h k epsilon);
+    }
+    yPlus
+    {
+        type            yPlus;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+    }
+    outletFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            outlet;
+        operation       sum;
+        fields          (phi);
+        writeFields     false;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    outletT
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            outlet;
+        operation       weightedAverage;
+        weightField     phi;
+        fields          (T);
+        writeFields     false;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    TminMax
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (T U);
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+
+    // ---- isotopes, transported every time step ----
+    C_N16
+    {
+        // N16: half-life 7.13 s (openmc.data)
+        type            scalarTransport;
+        writeControl    writeTime;
+        libs            (solverFunctionObjects);
+        field           C_N16;
+        phi             phi;
+        rho             rho;
+        alphaD          0;            // molecular diffusion neglected
+        alphaDt         1.176470588;   // 1/Sct, Sct = 0.85: D = mut/Sct
+        nCorr           1;
+        tolerance       1e-09;
+        bounded01       false;
+        resetOnStartUp  false;
+        fvOptions
+        {
+            source_N16
+            {
+                type            scalarCodedSource;
+                selectionMode   all;
+                fields          (C_N16);
+                name            flibeVolumeSource;
+                sourceField     S_N16;
+                lambda          0.09721559335;   // 1/s
+                codeInclude
+                #{
+                    #include "fvm.H"
+                #};
+                codeAddSupRho
+                #{
+                        // Explicit volumetric source read once from 0/<sourceField>, plus an
+                        // implicit decay sink -lambda*rho*psi (phi is a mass flux, so psi is per kg).
+                        const word srcName(coeffs_.get<word>("sourceField"));
+                        const scalar lambda(coeffs_.get<scalar>("lambda"));
+                        if (!mesh_.foundObject<volScalarField>(srcName))
+                        {
+                            regIOobject::store
+                            (
+                                new volScalarField
+                                (
+                                    IOobject
+                                    (
+                                        srcName, fileName("0"), mesh_,
+                                        IOobject::MUST_READ, IOobject::NO_WRITE
+                                    ),
+                                    mesh_
+                                )
+                            );
+                        }
+                        const volScalarField& S = mesh_.lookupObject<volScalarField>(srcName);
+                        eqn += S();
+                        if (lambda > 0)
+                        {
+                            eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
+                        }
+                #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
+            }
+        }
+    }
+    C_F20
+    {
+        // F20: half-life 11.163 s (openmc.data)
+        type            scalarTransport;
+        writeControl    writeTime;
+        libs            (solverFunctionObjects);
+        field           C_F20;
+        phi             phi;
+        rho             rho;
+        alphaD          0;            // molecular diffusion neglected
+        alphaDt         1.176470588;   // 1/Sct, Sct = 0.85: D = mut/Sct
+        nCorr           1;
+        tolerance       1e-09;
+        bounded01       false;
+        resetOnStartUp  false;
+        fvOptions
+        {
+            source_F20
+            {
+                type            scalarCodedSource;
+                selectionMode   all;
+                fields          (C_F20);
+                name            flibeVolumeSource;
+                sourceField     S_F20;
+                lambda          0.06209327068;   // 1/s
+                codeInclude
+                #{
+                    #include "fvm.H"
+                #};
+                codeAddSupRho
+                #{
+                        // Explicit volumetric source read once from 0/<sourceField>, plus an
+                        // implicit decay sink -lambda*rho*psi (phi is a mass flux, so psi is per kg).
+                        const word srcName(coeffs_.get<word>("sourceField"));
+                        const scalar lambda(coeffs_.get<scalar>("lambda"));
+                        if (!mesh_.foundObject<volScalarField>(srcName))
+                        {
+                            regIOobject::store
+                            (
+                                new volScalarField
+                                (
+                                    IOobject
+                                    (
+                                        srcName, fileName("0"), mesh_,
+                                        IOobject::MUST_READ, IOobject::NO_WRITE
+                                    ),
+                                    mesh_
+                                )
+                            );
+                        }
+                        const volScalarField& S = mesh_.lookupObject<volScalarField>(srcName);
+                        eqn += S();
+                        if (lambda > 0)
+                        {
+                            eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
+                        }
+                #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
+            }
+        }
+    }
+    C_O19
+    {
+        // O19: half-life 26.88 s (openmc.data)
+        type            scalarTransport;
+        writeControl    writeTime;
+        libs            (solverFunctionObjects);
+        field           C_O19;
+        phi             phi;
+        rho             rho;
+        alphaD          0;            // molecular diffusion neglected
+        alphaDt         1.176470588;   // 1/Sct, Sct = 0.85: D = mut/Sct
+        nCorr           1;
+        tolerance       1e-09;
+        bounded01       false;
+        resetOnStartUp  false;
+        fvOptions
+        {
+            source_O19
+            {
+                type            scalarCodedSource;
+                selectionMode   all;
+                fields          (C_O19);
+                name            flibeVolumeSource;
+                sourceField     S_O19;
+                lambda          0.02578672547;   // 1/s
+                codeInclude
+                #{
+                    #include "fvm.H"
+                #};
+                codeAddSupRho
+                #{
+                        // Explicit volumetric source read once from 0/<sourceField>, plus an
+                        // implicit decay sink -lambda*rho*psi (phi is a mass flux, so psi is per kg).
+                        const word srcName(coeffs_.get<word>("sourceField"));
+                        const scalar lambda(coeffs_.get<scalar>("lambda"));
+                        if (!mesh_.foundObject<volScalarField>(srcName))
+                        {
+                            regIOobject::store
+                            (
+                                new volScalarField
+                                (
+                                    IOobject
+                                    (
+                                        srcName, fileName("0"), mesh_,
+                                        IOobject::MUST_READ, IOobject::NO_WRITE
+                                    ),
+                                    mesh_
+                                )
+                            );
+                        }
+                        const volScalarField& S = mesh_.lookupObject<volScalarField>(srcName);
+                        eqn += S();
+                        if (lambda > 0)
+                        {
+                            eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
+                        }
+                #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
+            }
+        }
+    }
+    C_F18
+    {
+        // F18: half-life 6586.2 s (openmc.data)
+        type            scalarTransport;
+        writeControl    writeTime;
+        libs            (solverFunctionObjects);
+        field           C_F18;
+        phi             phi;
+        rho             rho;
+        alphaD          0;            // molecular diffusion neglected
+        alphaDt         1.176470588;   // 1/Sct, Sct = 0.85: D = mut/Sct
+        nCorr           1;
+        tolerance       1e-09;
+        bounded01       false;
+        resetOnStartUp  false;
+        fvOptions
+        {
+            source_F18
+            {
+                type            scalarCodedSource;
+                selectionMode   all;
+                fields          (C_F18);
+                name            flibeVolumeSource;
+                sourceField     S_F18;
+                lambda          0.0001052423523;   // 1/s
+                codeInclude
+                #{
+                    #include "fvm.H"
+                #};
+                codeAddSupRho
+                #{
+                        // Explicit volumetric source read once from 0/<sourceField>, plus an
+                        // implicit decay sink -lambda*rho*psi (phi is a mass flux, so psi is per kg).
+                        const word srcName(coeffs_.get<word>("sourceField"));
+                        const scalar lambda(coeffs_.get<scalar>("lambda"));
+                        if (!mesh_.foundObject<volScalarField>(srcName))
+                        {
+                            regIOobject::store
+                            (
+                                new volScalarField
+                                (
+                                    IOobject
+                                    (
+                                        srcName, fileName("0"), mesh_,
+                                        IOobject::MUST_READ, IOobject::NO_WRITE
+                                    ),
+                                    mesh_
+                                )
+                            );
+                        }
+                        const volScalarField& S = mesh_.lookupObject<volScalarField>(srcName);
+                        eqn += S();
+                        if (lambda > 0)
+                        {
+                            eqn -= fvm::Sp(dimensionedScalar(dimless/dimTime, lambda)*rho, eqn.psi());
+                        }
+                #};
+                codeCorrect
+                #{
+                #};
+                codeConstrain
+                #{
+                #};
+            }
+        }
+    }
+}

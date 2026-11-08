@@ -1,0 +1,113 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundary
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            patch;
+    }
+    inlet_udiv
+    {
+        type            patch;
+    }
+    inlet_outboard
+    {
+        type            patch;
+    }
+    inlet_ldiv
+    {
+        type            patch;
+    }
+    inlet_bypass
+    {
+        type            patch;
+    }
+    outlet
+    {
+        type            patch;
+    }
+    fw_inboard
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    vvGap_inboard
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    fw_udiv
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    vvGap_udiv
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    fw_outboard
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    vvGap_outboard
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    fw_ldiv
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    vvGap_ldiv
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    vvBulk
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    shield
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    tank
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    baffles
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+    openingSides
+    {
+        type            wall;
+        inGroups        (wall);
+    }
+}

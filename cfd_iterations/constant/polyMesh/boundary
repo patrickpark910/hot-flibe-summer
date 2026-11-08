@@ -1,0 +1,206 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2606                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+21
+(
+    front
+    {
+        type            wedge;
+        physicalType    patch;
+        nFaces          15926;
+        startFace       28836;
+    }
+
+    back
+    {
+        type            wedge;
+        physicalType    patch;
+        nFaces          15926;
+        startFace       44762;
+    }
+
+    fw_inboard
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          388;
+        startFace       60688;
+        inGroups        ( wall );
+    }
+
+    baffles
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          116;
+        startFace       61076;
+        inGroups        ( wall );
+    }
+
+    vvGap_inboard
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          390;
+        startFace       61192;
+        inGroups        ( wall );
+    }
+
+    inlet_inboard
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          6;
+        startFace       61582;
+    }
+
+    openingSides
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          68;
+        startFace       61588;
+        inGroups        ( wall );
+    }
+
+    fw_udiv
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          528;
+        startFace       61656;
+        inGroups        ( wall );
+    }
+
+    vvGap_udiv
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          556;
+        startFace       62184;
+        inGroups        ( wall );
+    }
+
+    inlet_udiv
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          4;
+        startFace       62740;
+    }
+
+    fw_outboard
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          548;
+        startFace       62744;
+        inGroups        ( wall );
+    }
+
+    vvGap_outboard
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          548;
+        startFace       63292;
+        inGroups        ( wall );
+    }
+
+    inlet_outboard
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          8;
+        startFace       63840;
+    }
+
+    fw_ldiv
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          528;
+        startFace       63848;
+        inGroups        ( wall );
+    }
+
+    vvGap_ldiv
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          556;
+        startFace       64376;
+        inGroups        ( wall );
+    }
+
+    inlet_ldiv
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          4;
+        startFace       64932;
+    }
+
+    outlet
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          12;
+        startFace       64936;
+    }
+
+    tank
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          504;
+        startFace       64948;
+        inGroups        ( wall );
+    }
+
+    inlet_bypass
+    {
+        type            patch;
+        physicalType    patch;
+        nFaces          4;
+        startFace       65452;
+    }
+
+    shield
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          332;
+        startFace       65456;
+        inGroups        ( wall );
+    }
+
+    vvBulk
+    {
+        type            wall;
+        physicalType    patch;
+        nFaces          806;
+        startFace       65788;
+        inGroups        ( wall );
+    }
+
+)
+
+
+// ************************************************************************* //

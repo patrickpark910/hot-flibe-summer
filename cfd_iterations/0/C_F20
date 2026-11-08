@@ -1,0 +1,114 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      C_F20;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// F20 specific concentration (atoms per kg of FLiBe). Solved on the frozen flow by the
+// scalarTransport function object in system/scalarsDict (./Allrun scalars).
+
+dimensions      [-1 0 0 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    inlet_udiv
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    inlet_outboard
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    inlet_ldiv
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    inlet_bypass
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+    fw_inboard
+    {
+        type            zeroGradient;
+    }
+    vvGap_inboard
+    {
+        type            zeroGradient;
+    }
+    fw_udiv
+    {
+        type            zeroGradient;
+    }
+    vvGap_udiv
+    {
+        type            zeroGradient;
+    }
+    fw_outboard
+    {
+        type            zeroGradient;
+    }
+    vvGap_outboard
+    {
+        type            zeroGradient;
+    }
+    fw_ldiv
+    {
+        type            zeroGradient;
+    }
+    vvGap_ldiv
+    {
+        type            zeroGradient;
+    }
+    vvBulk
+    {
+        type            zeroGradient;
+    }
+    shield
+    {
+        type            zeroGradient;
+    }
+    tank
+    {
+        type            zeroGradient;
+    }
+    baffles
+    {
+        type            zeroGradient;
+    }
+    openingSides
+    {
+        type            zeroGradient;
+    }
+}

@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Transient copy of cfd/case_v3a (hand-edited; NOT written by make_case.py)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(U)         cellLimited Gauss linear 1;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      Gauss linearUpwind grad(U);
+    div(phi,h)      Gauss limitedLinear 1;
+    div(phi,K)      Gauss limitedLinear 1;
+    div(phi,k)      Gauss upwind;
+    div(phi,epsilon) Gauss upwind;
+    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+    div(phi,C_N16) Gauss limitedLinear 1;
+    div(phi,C_F20) Gauss limitedLinear 1;
+    div(phi,C_O19) Gauss limitedLinear 1;
+    div(phi,C_F18) Gauss limitedLinear 1;
+    div(phi,age)    Gauss limitedLinear 1;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear limited corrected 0.33;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         limited corrected 0.33;
+}
+
+wallDist
+{
+    method          meshWave;
+}

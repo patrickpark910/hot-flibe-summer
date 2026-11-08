@@ -180,7 +180,7 @@ CFG = dict(
     # recirculate through the external loop)
 
     # ---- numerics / run ---------------------------------------------------------
-    end_iterations=dict(fine=5000, coarse=300),
+    end_iterations=dict(fine=30000, coarse=10000),
     write_interval=dict(fine=500, coarse=100),
     n_procs=dict(fine=8, coarse=1),    # 1 = serial
     # ASSUMPTION: safeguards (numerics only). rhoMin/rhoMax in SIMPLE are rho at these

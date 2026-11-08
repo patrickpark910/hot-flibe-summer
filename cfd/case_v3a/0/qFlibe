@@ -11,7 +11,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// FLiBe nuclear heating (W/m3), mapped conservatively from /home/ppark/projects/hot-flibe-summer/ARC_v3A/run_v3a/source_fields.npz by cfd/make_case.py map
+// FLiBe nuclear heating (W/m3), mapped conservatively from /home/patri/projects/hot-flibe-summer/ARC_v3A/run_v3a/source_fields.npz by cfd/make_case.py map
 
 dimensions      [1 -1 -3 0 0 0 0];
 

@@ -1,0 +1,1 @@
+LIB = $(PWD)/../platforms/$(WM_OPTIONS)/lib/libflibeVolumeSource_aefcf76179426655342437a1153d043839abc896

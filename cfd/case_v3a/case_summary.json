@@ -35,7 +35,7 @@
   }
  },
  "Sct": 0.85,
- "openmc_run": "/home/ppark/projects/hot-flibe-summer/ARC_v3A/run_v3a",
+ "openmc_run": "/home/patri/projects/hot-flibe-summer/ARC_v3A/run_v3a",
  "patches": {
   "front": {
    "role": "wedge"

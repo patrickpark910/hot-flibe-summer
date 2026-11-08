@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         steadyState;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(U)         cellLimited Gauss linear 1;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      bounded Gauss linearUpwind grad(U);
+    div(phi,h)      bounded Gauss limitedLinear 1;
+    div(phi,K)      bounded Gauss limitedLinear 1;
+    div(phi,k)      bounded Gauss upwind;
+    div(phi,epsilon) bounded Gauss upwind;
+    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
+    div(phi,C_N16) bounded Gauss limitedLinear 1;
+    div(phi,C_F20) bounded Gauss limitedLinear 1;
+    div(phi,C_O19) bounded Gauss limitedLinear 1;
+    div(phi,C_F18) bounded Gauss limitedLinear 1;
+    div(phi,age)    bounded Gauss limitedLinear 1;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear limited corrected 0.33;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         limited corrected 0.33;
+}
+
+wallDist
+{
+    method          meshWave;
+}

@@ -1,0 +1,96 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2606                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "2500/uniform/functionObjects";
+    object      functionObjectProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+cdf7e925f5746741c316f5fbcf39ad0dfca90775
+{
+    solverInfo
+    {
+        scalar
+        {
+            Ux_initial      0.0309994875377;
+            Ux_final        0.00087533422423;
+            Uy_initial      0.0304922547175;
+            Uy_final        0.000803810904451;
+            Uz_initial      0.013450400901;
+            Uz_final        0.000374527396434;
+            epsilon_initial 0.00101743839791;
+            epsilon_final   3.96429631066e-05;
+            h_initial       0.000772304873583;
+            h_final         1.23440931557e-05;
+            k_initial       0.00892812088475;
+            k_final         0.000548617143935;
+            p_rgh_initial   0.280964731281;
+            p_rgh_final     0.00166221536094;
+        }
+        label
+        {
+            Ux_iters        1;
+            Uy_iters        1;
+            Uz_iters        1;
+            epsilon_iters   1;
+            h_iters         1;
+            k_iters         1;
+            p_rgh_iters     2;
+        }
+    }
+    outletFlow
+    {
+        scalar
+        {
+            sum(outlet,phi) 29.51989718384637;
+        }
+    }
+    outletT
+    {
+        scalar
+        {
+            weightedAverage(outlet,T) 901.3547029902645;
+        }
+    }
+    TminMax
+    {
+        scalar
+        {
+            min(T)          798.6982518727025;
+            max(T)          2989.244135931746;
+            min(mag(U))     0;
+            max(mag(U))     2.857291139030226;
+        }
+        label
+        {
+            min(T)_cell     11758;
+            min(T)_processor 0;
+            max(T)_cell     2127;
+            max(T)_processor 0;
+            min(mag(U))_cell 108;
+            min(mag(U))_processor 0;
+            max(mag(U))_cell 8782;
+            max(mag(U))_processor 0;
+        }
+        vector
+        {
+            min(T)_position ( 4.16146341327 -4.0395374134e-18 4.38482281209 );
+            max(T)_position ( 4.32038831059 0 2.5396010077 );
+            min(mag(U))_position ( 3.4078245827 -1.44607560645e-19 0.867618914914 );
+            max(mag(U))_position ( 3.57690426701 -0.0624350962227 -2.07105741423 );
+        }
+    }
+}
+
+
+// ************************************************************************* //

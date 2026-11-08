@@ -1,0 +1,6 @@
+/* dynamicCode:
+ * SHA1 = 6ac5856ab30f20c956461ac10ee01f2958e2af34
+ */
+codedFvOptionTemplate.C
+
+LIB = $(PWD)/../platforms/$(WM_OPTIONS)/lib/libflibeVolumeSource_6ac5856ab30f20c956461ac10ee01f2958e2af34

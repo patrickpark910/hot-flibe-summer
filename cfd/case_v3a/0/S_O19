@@ -11,7 +11,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// O19 production (atoms/m3/s), mapped conservatively from /home/ppark/projects/hot-flibe-summer/ARC_v3A/run_v3a/source_fields.npz by cfd/make_case.py map
+// O19 production (atoms/m3/s), mapped conservatively from /home/patri/projects/hot-flibe-summer/ARC_v3A/run_v3a/source_fields.npz by cfd/make_case.py map
 
 dimensions      [0 -3 -1 0 0 0 0];
 

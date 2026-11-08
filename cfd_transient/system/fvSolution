@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Transient copy of cfd/case_v3a (hand-edited; NOT written by make_case.py)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "rho.*"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       0;
+        relTol          0;
+    }
+    p_rgh
+    {
+        solver          GAMG;
+        smoother        DICGaussSeidel;
+        tolerance       1e-8;
+        relTol          0.01;
+    }
+    "(U|h|k|epsilon)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0.1;
+    }
+    p_rghFinal
+    {
+        $p_rgh;
+        relTol          0;
+    }
+    "(U|h|k|epsilon)Final"
+    {
+        $U;
+        relTol          0;
+    }
+    "(C_.*|age)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-14;
+        relTol          1e-6;
+        maxIter         20000;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor yes;
+    nOuterCorrectors 3;
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       100000.0;
+    rhoMin          1729.8;   // rho clamp, same as the steady case (rho at T_limits)
+    rhoMax          2055.78;
+    // Explicit pMin/pMax stop buoyantPimpleFoam from deriving pressure limits from
+    // rhoMin/rhoMax (an ideal-gas assumption, wrong for FLiBe). These never bind.
+    pMin            1000;
+    pMax            1e8;
+}
+
+relaxationFactors
+{
+    // under-relax the first outer correctors of each time step; none on the last
+    fields
+    {
+        p_rgh           0.7;
+        p_rghFinal      1;
+    }
+    equations
+    {
+        "(U|h|k|epsilon)" 0.7;
+        ".*Final"       1;
+        "C_.*"          1;
+    }
+}

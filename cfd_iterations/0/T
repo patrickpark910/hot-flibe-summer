@@ -1,0 +1,155 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 850.0;
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            fixedValue;
+        value           uniform 800.0;
+    }
+    inlet_udiv
+    {
+        type            fixedValue;
+        value           uniform 800.0;
+    }
+    inlet_outboard
+    {
+        type            fixedValue;
+        value           uniform 800.0;
+    }
+    inlet_ldiv
+    {
+        type            fixedValue;
+        value           uniform 800.0;
+    }
+    inlet_bypass
+    {
+        type            fixedValue;
+        value           uniform 800.0;
+    }
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform 900.0;
+        value           uniform 900.0;
+    }
+    fw_inboard
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 390538.6384;   // W in the wedge; 70.2970 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    vvGap_inboard
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 58970.06078;   // W in the wedge; 10.6146 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    fw_udiv
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 375695.8852;   // W in the wedge; 67.6253 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    vvGap_udiv
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 13219.32933;   // W in the wedge; 2.3795 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    fw_outboard
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 857131.8028;   // W in the wedge; 154.2837 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    vvGap_outboard
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 160218.9598;   // W in the wedge; 28.8394 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    fw_ldiv
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 375258.2839;   // W in the wedge; 67.5465 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    vvGap_ldiv
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 13144.29589;   // W in the wedge; 2.3660 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    vvBulk
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 245552.6458;   // W in the wedge; 44.1995 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    shield
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 65319.86744;   // W in the wedge; 11.7576 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    tank
+    {
+        type            externalWallHeatFluxTemperature;
+        mode            power;
+        Q               constant 1658.579249;   // W in the wedge; 0.2985 MW full machine
+        kappaMethod     fluidThermo;
+        value           uniform 850.0;
+    }
+    baffles
+    {
+        type            zeroGradient;
+    }
+    openingSides
+    {
+        type            zeroGradient;
+    }
+}

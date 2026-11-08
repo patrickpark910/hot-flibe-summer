@@ -186,7 +186,7 @@ that is OpenMC statistical noise.
 | Schemes | U `bounded Gauss linearUpwind grad(U)`; h, K, scalars, age `bounded Gauss limitedLinear 1`; k, ε `bounded Gauss upwind`; laplacian `Gauss linear limited corrected 0.33` | ASSUMPTION (mine) |
 | Relaxation | p_rgh 0.7, U 0.3, h 0.3, k/ε 0.5, scalars and age 1 | ASSUMPTION (mine); U, h, p_rgh as in the v2606 `buoyantCavity` tutorial |
 | Residual control | p_rgh 1e-5, U 1e-6, h 1e-7, k/ε 1e-5 | ASSUMPTION (mine) |
-| Iterations | fine 5000 (write every 500), coarse 300 (every 100) | ASSUMPTION (mine) |
+| Iterations | fine 30000 (write every 500), coarse 10000 (every 100) | USER (2026-11-07; was fine 5000, coarse 300, my assumption) |
 | Processes | fine 8 (scotch), coarse 1 | ASSUMPTION (mine); the machine has 32 threads |
 | Coded fvOptions | need `wmake` and headers (`openfoam2606-dev` or `-default`); v2606 also requires `codeCorrect` and `codeConstrain` (written empty) | note |
 | T limiter | `limitTemperature` fvOption, all cells, 732–1400 K (`CFG["T_limits"]`) | ASSUMPTION (mine), numerics only. 732 K is the FLiBe freezing point; 1400 K is well above any expected cell temperature. It never clipped a cell in the first coarse run (cell T 800–919 K); kept as a guard. Must clip nothing at convergence: `post_cfd.py` reports it from `postProcessing/limitT` |

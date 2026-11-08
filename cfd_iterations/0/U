@@ -1,0 +1,125 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Written by cfd/make_case.py (ARC V3A FLiBe case)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    front
+    {
+        type            wedge;
+    }
+    back
+    {
+        type            wedge;
+    }
+    inlet_inboard
+    {
+        type            flowRateInletVelocity;
+        massFlowRate    constant 4.861301267;   // kg/s in the wedge; 875.0 kg/s full machine
+        rho             rho;
+        rhoInlet        2022.6;
+        value           uniform (0 0 0);
+    }
+    inlet_udiv
+    {
+        type            flowRateInletVelocity;
+        massFlowRate    constant 2.848689462;   // kg/s in the wedge; 512.8 kg/s full machine
+        rho             rho;
+        rhoInlet        2022.6;
+        value           uniform (0 0 0);
+    }
+    inlet_outboard
+    {
+        type            flowRateInletVelocity;
+        massFlowRate    constant 11.59654275;   // kg/s in the wedge; 2087.4 kg/s full machine
+        rho             rho;
+        rhoInlet        2022.6;
+        value           uniform (0 0 0);
+    }
+    inlet_ldiv
+    {
+        type            flowRateInletVelocity;
+        massFlowRate    constant 2.841051985;   // kg/s in the wedge; 511.4 kg/s full machine
+        rho             rho;
+        rhoInlet        2022.6;
+        value           uniform (0 0 0);
+    }
+    inlet_bypass
+    {
+        type            flowRateInletVelocity;
+        massFlowRate    constant 7.395100038;   // kg/s in the wedge; 1331.1 kg/s full machine
+        rho             rho;
+        rhoInlet        2022.6;
+        value           uniform (0 0 0);
+    }
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    fw_inboard
+    {
+        type            noSlip;
+    }
+    vvGap_inboard
+    {
+        type            noSlip;
+    }
+    fw_udiv
+    {
+        type            noSlip;
+    }
+    vvGap_udiv
+    {
+        type            noSlip;
+    }
+    fw_outboard
+    {
+        type            noSlip;
+    }
+    vvGap_outboard
+    {
+        type            noSlip;
+    }
+    fw_ldiv
+    {
+        type            noSlip;
+    }
+    vvGap_ldiv
+    {
+        type            noSlip;
+    }
+    vvBulk
+    {
+        type            noSlip;
+    }
+    shield
+    {
+        type            noSlip;
+    }
+    tank
+    {
+        type            noSlip;
+    }
+    baffles
+    {
+        type            noSlip;
+    }
+    openingSides
+    {
+        type            noSlip;
+    }
+}

@@ -1,0 +1,89 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Copy of cfd/case_v3a for an iteration movie (hand-edited: purgeWrite 0, writeInterval 50)
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     buoyantSimpleFoam;
+startFrom       latestTime;
+startTime       0;
+stopAt          endTime;
+endTime         10000;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   50;
+purgeWrite      0;
+writeFormat     ascii;
+writePrecision  12;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+
+functions
+{
+    solverInfo
+    {
+        type            solverInfo;
+        libs            (utilityFunctionObjects);
+        fields          (U p_rgh h k epsilon);
+    }
+    yPlus
+    {
+        type            yPlus;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+    }
+    outletFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            outlet;
+        operation       sum;
+        fields          (phi);
+        writeFields     false;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    outletT
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        regionType      patch;
+        name            outlet;
+        operation       weightedAverage;
+        weightField     phi;
+        fields          (T);
+        writeFields     false;
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    TminMax
+    {
+        type            fieldMinMax;
+        libs            (fieldFunctionObjects);
+        fields          (T U);
+        writeControl    timeStep;
+        writeInterval   10;
+    }
+    age
+    {
+        type            age;
+        libs            (fieldFunctionObjects);
+        phi             phi;
+        rho             rho;
+        nCorr           100;
+        tolerance       1e-09;
+        diffusion       on;   // muEff = mu + mut
+        executeControl  onEnd;
+        writeControl    writeTime;
+    }
+}
